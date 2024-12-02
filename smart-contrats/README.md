@@ -1,5 +1,14 @@
 # DEMO nft showcase
 
+!!!! Only for demo purpose
+Before  test please install foundry
+
+## Test
+```shell
+$ forge install
+$ forge buld
+$ forge test
+```
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
