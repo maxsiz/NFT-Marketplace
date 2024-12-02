@@ -21,25 +21,29 @@ contract DemoShowCase is ERC721Holder, ReentrancyGuard {
 
     error OnlyNFTOwner();
 
+    event NFTOnSale(address indexed contractAddress, uint256 indexed tokenId);
+    event NFTRemovedFromSale(address indexed contractAddress, uint256 indexed tokenId);
+    event NFTSold(address indexed contractAddress, uint256 indexed tokenId, address payAsset, uint256 payAmount);
+
     mapping (address =>  mapping(uint256 => AssetOnSale)) public nftOnSale;
 
    function setForSale(NFT calldata _asset, address sellForToken, uint256 _price) external {
        // Only NFT owner can sell NFT on this ShowCase
-       if (IERC721(_asset.contractAddress).ownerOf(_asset.tokenId) == msg.sender) {
+        if (IERC721(_asset.contractAddress).ownerOf(_asset.tokenId) == msg.sender) {
            
-           // Price must be more then 0
-           require (_price > 0, "Cant sell for zero price");
-           nftOnSale[_asset.contractAddress][_asset.tokenId] = AssetOnSale(
+            // Price must be more then 0
+            require (_price > 0, "Cant sell for zero price");
+            nftOnSale[_asset.contractAddress][_asset.tokenId] = AssetOnSale(
                msg.sender,
                sellForToken,
                _price
-           );
+            );
 
-       	   IERC721(_asset.contractAddress).transferFrom(msg.sender, address(this), _asset.tokenId);
-
-       } else {
+       	    IERC721(_asset.contractAddress).transferFrom(msg.sender, address(this), _asset.tokenId);
+            emit NFTRemovedFromSale(_asset.contractAddress, _asset.tokenId);
+        } else {
        	   revert OnlyNFTOwner();
-       }
+        }
 
    }
 
@@ -48,6 +52,7 @@ contract DemoShowCase is ERC721Holder, ReentrancyGuard {
         AssetOnSale memory nft =  nftOnSale[_asset.contractAddress][_asset.tokenId];
         if (nft.tokenOwner == msg.sender) {
        	   IERC721(_asset.contractAddress).transferFrom(address(this), msg.sender, _asset.tokenId);
+       	   emit NFTOnSale(_asset.contractAddress, _asset.tokenId);
        } else {
        	   revert OnlyNFTOwner();
        }	
@@ -87,6 +92,7 @@ contract DemoShowCase is ERC721Holder, ReentrancyGuard {
             address payable s = payable(msg.sender);
             s.transfer(change);
         }
+        emit NFTSold(_asset.contractAddress, _asset.tokenId, nft.asset, nft.price);
    }
 
    function getNFTPrice(NFT calldata _asset) external view returns(AssetOnSale memory pr) {
